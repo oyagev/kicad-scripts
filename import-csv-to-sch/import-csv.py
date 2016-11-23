@@ -1,5 +1,7 @@
 import csv
+import pprint
 
+import sys
 from sch.sch import Schematic
 import argparse
 
@@ -18,15 +20,35 @@ csvf = open(args.csv_file, 'r')
 reader = csv.reader(csvf)
 header_ok = False
 
-for row in reader:
-    # Try to locate the header row
-    if args.column_reference in row:
-        header_ok = True
-        ref_col = row.index(args.column_reference)
+components = {}
 
-    print row
 
-if not header_ok:
-    sys.stderr.write('Cannot find a header with reference field: "%s"\n' % (args.column_reference))
+fields = reader.next()
+#fields = map(str.strip, fields)
+
+
+if args.column_reference in fields:
+    refIndex = fields.index(args.column_reference)
+    if refIndex != 0:
+        sys.stderr.write('Reference field must be first column' )
+        sys.exit()
+
+else:
+    sys.stderr.write('Cannot find a title row with reference field: "%s"\n' % (args.column_reference))
     sys.exit()
+
+for row in reader:
+    ref = row[0].strip()
+    if ref in components.keys():
+        sys.stderr.write('Component with reference "%s" already exist on previous row\n' % (ref))
+        sys.exit()
+
+    components[ref] = {}
+
+    for i in range(len(row))[1:]:
+        if row[i] != '':
+            components[ref][fields[i].strip()] = row[i].strip()
+
+pprint.pprint(components)
+
 
